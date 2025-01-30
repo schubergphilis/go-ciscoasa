@@ -222,7 +222,7 @@ func kindFromValue(value string) (string, error) {
 	}
 
 	// Test if the value specifies a range.
-	if strings.Contains(value, "-") {
+	if checkIprange(value) {
 		parts := strings.Split(value, "-")
 		from := net.ParseIP(parts[0])
 		to := net.ParseIP(parts[1])
@@ -264,6 +264,7 @@ func kindFromValue(value string) (string, error) {
 		}
 	}
 
+	// Test if the value specifies a FQDN
 	if govalidator.IsDNSName(value) {
 		return "IPv4FQDN", nil
 	}
@@ -325,4 +326,19 @@ func (c *Client) CreateBackup(context, location, passphrase string) error {
 	_, err = c.do(req, nil)
 
 	return err
+}
+
+// Check if the given IP range has 2 valid IP addresses
+// otherwise it's most likely something else (FQDN)
+func checkIprange(iprange string) bool {
+	parts := strings.Split(iprange, "-")
+	if len(parts) != 2 {
+		return false
+	}
+
+	if net.ParseIP(parts[0]) != nil && net.ParseIP(parts[1]) != nil {
+		return true
+	}
+
+	return false
 }
